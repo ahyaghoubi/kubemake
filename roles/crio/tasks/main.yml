@@ -68,7 +68,7 @@
   apt:
     update_cache: yes
 
-- name: Install cri-o and cri-o-runc
+- name: Install CRI-O
   apt:
     name: "{{ packages }}"
     state: present
@@ -76,7 +76,6 @@
   vars:
     packages:
     - cri-o
-    - cri-o-runc
 
 - name: Clean up temporary key files
   file:
