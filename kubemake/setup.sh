@@ -49,55 +49,20 @@ fi
 
 # Install Ansible
 echo ""
-echo "🔧 Installing Ansible..."
+echo "🔧 Installing Ansible globally..."
 
-# Check if we need to use virtual environment (Python 3.12+ externally-managed-environment)
-if python3 -m pip install --user ansible>=6.0.0 2>/dev/null; then
-    echo "✅ Ansible installed using --user flag"
-    VENV_NEEDED=false
-else
-    echo "⚠️  System Python is externally managed, creating virtual environment..."
-    VENV_NEEDED=true
-    
-    # Create virtual environment
-    python3 -m venv ~/.kubemake-venv
-    
-    # Activate virtual environment
-    source ~/.kubemake-venv/bin/activate
-    
-    # Upgrade pip in virtual environment
-    pip install --upgrade pip
-    
-    # Install Ansible in virtual environment
-    pip install ansible>=6.0.0
-    
-    echo "✅ Ansible installed in virtual environment"
-fi
+# Install Ansible globally using sudo
+echo "Installing Ansible and required Python packages globally..."
+sudo pip3 install ansible>=6.0.0 kubernetes>=24.2.0 PyYAML requests
 
-# Install additional Python packages for Kubernetes
-echo "Installing required Python packages..."
-if [ "$VENV_NEEDED" = true ]; then
-    # We're in virtual environment
-    pip install kubernetes>=24.2.0 PyYAML requests
-else
-    # Use --user flag
-    pip3 install --user kubernetes>=24.2.0 PyYAML requests
-fi
-
-# Add local bin to PATH if not already there
-if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
-    echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
-    export PATH="$HOME/.local/bin:$PATH"
-    echo "✅ Updated PATH in ~/.bashrc"
-fi
+echo "✅ Ansible and Python packages installed globally"
 
 # Verify Ansible installation
 echo ""
 echo "🔍 Verifying Ansible installation..."
 if ! command -v ansible-playbook &> /dev/null; then
-    echo "❌ Error: Ansible installation failed or PATH not updated"
-    echo "Please run: source ~/.bashrc"
-    echo "Then verify with: ansible --version"
+    echo "❌ Error: Ansible installation failed"
+    echo "Please verify with: ansible --version"
     exit 1
 fi
 
