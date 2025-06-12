@@ -66,9 +66,24 @@ echo ""
 echo "2. CHECKING ANSIBLE REQUIREMENTS..."
 echo "--------------------------------------------"
 
+# Check for Ansible in PATH and pipx locations
+ANSIBLE_FOUND=false
 if command -v ansible-playbook &> /dev/null; then
     success "Ansible found: $(ansible --version | head -n1)"
-else
+    ANSIBLE_FOUND=true
+elif [ -x "$HOME/.local/bin/ansible-playbook" ]; then
+    success "Ansible found in pipx: $($HOME/.local/bin/ansible --version | head -n1)"
+    ANSIBLE_FOUND=true
+    # Update PATH for this session
+    export PATH="$HOME/.local/bin:$PATH"
+elif [ -x "/root/.local/bin/ansible-playbook" ]; then
+    success "Ansible found in pipx: $(/root/.local/bin/ansible --version | head -n1)"
+    ANSIBLE_FOUND=true
+    # Update PATH for this session
+    export PATH="/root/.local/bin:$PATH"
+fi
+
+if [ "$ANSIBLE_FOUND" = false ]; then
     error "Ansible not found. Please install Ansible first."
 fi
 
@@ -82,15 +97,20 @@ echo ""
 echo "3. CHECKING PLAYBOOK SYNTAX..."
 echo "--------------------------------------------"
 
-for playbook in site.yml site-improved.yml; do
-    if [ -f "$playbook" ]; then
-        if ansible-playbook "$playbook" --syntax-check &> /dev/null; then
-            success "$playbook syntax valid"
-        else
-            error "$playbook syntax validation failed"
+# Only check syntax if Ansible was found
+if [ "$ANSIBLE_FOUND" = true ]; then
+    for playbook in site.yml site-improved.yml; do
+        if [ -f "$playbook" ]; then
+            if ansible-playbook "$playbook" --syntax-check &> /dev/null; then
+                success "$playbook syntax valid"
+            else
+                error "$playbook syntax validation failed"
+            fi
         fi
-    fi
-done
+    done
+else
+    error "Cannot validate playbook syntax - Ansible not available"
+fi
 
 echo ""
 echo "4. CHECKING ROLE STRUCTURE..."
