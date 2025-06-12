@@ -8,9 +8,10 @@
       update_cache: yes
 
   - name: Install kubernetes Python package
-    pip:
-      name: kubernetes
+    apt:
+      name: python3-kubernetes
       state: present
+      update_cache: yes
 
 - name: Populate service facts
   service_facts:
