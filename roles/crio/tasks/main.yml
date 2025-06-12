@@ -36,6 +36,14 @@
     state: directory
     mode: '0755'
 
+- name: Clean up old CRI-O repository configurations
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/apt/sources.list.d/cri-o.list
+    - /etc/apt/keyrings/cri-o-apt-keyring.gpg
+
 - name: Install dependencies for adding repositories
   apt:
     name: "{{ packages }}"
@@ -55,6 +63,10 @@
         tee /etc/apt/sources.list.d/cri-o.list
   args:
     creates: /etc/apt/keyrings/cri-o-apt-keyring.gpg
+
+- name: Update apt cache after adding CRI-O repository
+  apt:
+    update_cache: yes
 
 - name: Install cri-o and cri-o-runc
   apt:
