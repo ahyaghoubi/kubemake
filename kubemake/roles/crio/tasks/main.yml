@@ -36,12 +36,22 @@
     state: directory
     mode: '0755'
 
-- name: Add CRI-O repository key and repository
+- name: Install dependencies for adding repositories
+  apt:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+    - software-properties-common
+    - curl
+
+- name: Add CRI-O repository key and repository  
   shell: |
-    curl -fsSL https://download.opensuse.org/repositories/isv:/cri-o:/stable:/{{ crio_version }}/deb/Release.key |
+    curl -fsSL https://download.opensuse.org/repositories/isv:/cri-o:/stable:/v{{ crio_version }}/deb/Release.key |
         gpg --dearmor -o /etc/apt/keyrings/cri-o-apt-keyring.gpg
     
-    echo "deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] https://download.opensuse.org/repositories/isv:/cri-o:/stable:/{{ crio_version }}/deb/ /" |
+    echo "deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] https://download.opensuse.org/repositories/isv:/cri-o:/stable:/v{{ crio_version }}/deb/ /" |
         tee /etc/apt/sources.list.d/cri-o.list
   args:
     creates: /etc/apt/keyrings/cri-o-apt-keyring.gpg
