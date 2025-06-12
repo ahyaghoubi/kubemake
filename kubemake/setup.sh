@@ -50,11 +50,39 @@ fi
 # Install Ansible
 echo ""
 echo "🔧 Installing Ansible..."
-pip3 install --user ansible>=6.0.0
+
+# Check if we need to use virtual environment (Python 3.12+ externally-managed-environment)
+if python3 -m pip install --user ansible>=6.0.0 2>/dev/null; then
+    echo "✅ Ansible installed using --user flag"
+    VENV_NEEDED=false
+else
+    echo "⚠️  System Python is externally managed, creating virtual environment..."
+    VENV_NEEDED=true
+    
+    # Create virtual environment
+    python3 -m venv ~/.kubemake-venv
+    
+    # Activate virtual environment
+    source ~/.kubemake-venv/bin/activate
+    
+    # Upgrade pip in virtual environment
+    pip install --upgrade pip
+    
+    # Install Ansible in virtual environment
+    pip install ansible>=6.0.0
+    
+    echo "✅ Ansible installed in virtual environment"
+fi
 
 # Install additional Python packages for Kubernetes
 echo "Installing required Python packages..."
-pip3 install --user kubernetes>=24.2.0 PyYAML requests
+if [ "$VENV_NEEDED" = true ]; then
+    # We're in virtual environment
+    pip install kubernetes>=24.2.0 PyYAML requests
+else
+    # Use --user flag
+    pip3 install --user kubernetes>=24.2.0 PyYAML requests
+fi
 
 # Add local bin to PATH if not already there
 if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
