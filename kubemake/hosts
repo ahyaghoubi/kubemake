@@ -7,6 +7,7 @@ master ansible_user=root ansible_host=192.168.251.200 kubelet_node_ip=192.168.25
 
 [all:vars]
 ansible_password=131072
+ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
 # CRI-O version matching Kubernetes version
 crio_version="1.30"
 # Ubuntu version - use xUbuntu_22.04 for Ubuntu 22.04, xUbuntu_24.04 for Ubuntu 24.04
