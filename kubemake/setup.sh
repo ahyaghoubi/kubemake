@@ -47,22 +47,36 @@ if ! python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)'; 
     echo "⚠️  Warning: Python 3.8+ is recommended for best compatibility"
 fi
 
-# Install Ansible
+# Install pipx
 echo ""
-echo "🔧 Installing Ansible globally..."
+echo "📦 Installing pipx..."
+sudo apt install -y pipx
+pipx ensurepath
 
-# Install Ansible globally using sudo
-echo "Installing Ansible and required Python packages globally..."
-sudo pip3 install ansible>=6.0.0 kubernetes>=24.2.0 PyYAML requests
+# Install Ansible using pipx
+echo ""
+echo "🔧 Installing Ansible with pipx..."
 
-echo "✅ Ansible and Python packages installed globally"
+# Install Ansible with dependencies using pipx
+echo "Installing Ansible and required Python packages with pipx..."
+pipx install --include-deps ansible
+
+# Install additional Python dependencies for Kubernetes
+echo "Installing additional Python dependencies..."
+pipx inject ansible kubernetes PyYAML requests
+
+echo "✅ Ansible and Python packages installed with pipx"
+
+# Ensure pipx PATH is available in current session
+export PATH="$HOME/.local/bin:$PATH"
 
 # Verify Ansible installation
 echo ""
 echo "🔍 Verifying Ansible installation..."
 if ! command -v ansible-playbook &> /dev/null; then
     echo "❌ Error: Ansible installation failed"
-    echo "Please verify with: ansible --version"
+    echo "Please run: source ~/.bashrc"
+    echo "Then verify with: ansible --version"
     exit 1
 fi
 
@@ -119,7 +133,7 @@ echo "=========================================="
 echo "           SETUP COMPLETE! 🎉"
 echo "=========================================="
 echo ""
-echo "✅ Ansible and dependencies installed"
+echo "✅ Ansible and dependencies installed with pipx"
 echo "✅ Required collections configured"
 echo "✅ Playbook syntax validated"
 echo ""
