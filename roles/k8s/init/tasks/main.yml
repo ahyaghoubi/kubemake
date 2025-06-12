@@ -34,7 +34,7 @@
     kubeadm init 
     --apiserver-advertise-address={{ apiserver_advertise_address }} 
     --pod-network-cidr={{ pod_network_cidr }}
-    --ignore-preflight-errors=NumCPU
+    --ignore-preflight-errors=NumCPU,ImagePull
   when:
     - not k8s_admin_conf.stat.exists
   register: kubeadm_init
