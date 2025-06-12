@@ -5,7 +5,8 @@
   become: false
   tags:
     - preflight
-    - always  tasks:
+    - always
+  tasks:
     - name: Check connectivity to all hosts
       ping:
       
