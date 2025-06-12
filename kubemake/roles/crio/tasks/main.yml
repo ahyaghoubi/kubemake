@@ -1,4 +1,12 @@
 ---
+- name: Validate CRI-O configuration variables
+  assert:
+    that:
+      - crio_version is defined
+      - crio_os is defined
+      - crio_version is version('1.25', '>=')
+    fail_msg: "CRI-O version must be 1.25 or higher and crio_version/crio_os must be defined"
+
 - name: Add crio configuration file to /etc/modules-load.d/
   copy:
     src: modules-load.conf
@@ -22,25 +30,45 @@
 - name: Force sysctl to load settings from all system conf files
   shell: sysctl --system
 
+- name: Create keyrings directory
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
 - name: Download libcontainers public signing key
-  apt_key:
+  get_url:
     url: https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/{{crio_os}}/Release.key
-    keyring: /etc/apt/trusted.gpg.d/libcontainers.gpg
+    dest: /tmp/libcontainers.key
+    mode: '0644'
+
+- name: Add libcontainers GPG key
+  shell: |
+    gpg --dearmor < /tmp/libcontainers.key > /etc/apt/keyrings/libcontainers.gpg
+  args:
+    creates: /etc/apt/keyrings/libcontainers.gpg
 
 - name: Download libcontainers-cri-o public signing key
-  apt_key:
+  get_url:
     url: https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/{{ crio_version }}/{{ crio_os }}/Release.key
-    keyring: /etc/apt/trusted.gpg.d/libcontainers-cri-o.gpg
+    dest: /tmp/libcontainers-cri-o.key
+    mode: '0644'
+
+- name: Add libcontainers-cri-o GPG key
+  shell: |
+    gpg --dearmor < /tmp/libcontainers-cri-o.key > /etc/apt/keyrings/libcontainers-cri-o.gpg
+  args:
+    creates: /etc/apt/keyrings/libcontainers-cri-o.gpg
 
 - name: Add libcontainers apt repository
   apt_repository:
-    repo: deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/{{ crio_os }} /
+    repo: "deb [signed-by=/etc/apt/keyrings/libcontainers.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/{{ crio_os }} /"
     filename: devel:kubic:libcontainers:stable
     state: present
 
 - name: Add libcontainers-cri-o apt repository
   apt_repository:
-    repo: deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/{{ crio_version }}/{{ crio_os }} /
+    repo: "deb [signed-by=/etc/apt/keyrings/libcontainers-cri-o.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/{{ crio_version }}/{{ crio_os }} /"
     filename: devel:kubic:libcontainers:stable:cri-o:{{ crio_version }}
     state: present
 
@@ -54,8 +82,35 @@
     - cri-o
     - cri-o-runc
 
+- name: Clean up temporary key files
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /tmp/libcontainers.key
+    - /tmp/libcontainers-cri-o.key
+
 - name: Daemon reload
   shell: systemctl daemon-reload
 
 - name: Enable cri-o
   shell: systemctl enable crio --now
+
+- name: Verify CRI-O is running
+  systemd:
+    name: crio
+    state: started
+    enabled: yes
+  register: crio_status
+
+- name: Create crictl config
+  copy:
+    content: |
+      runtime-endpoint: unix:///var/run/crio/crio.sock
+      image-endpoint: unix:///var/run/crio/crio.sock
+      timeout: 10
+      debug: false
+    dest: /etc/crictl.yaml
+    owner: root
+    group: root
+    mode: '0644'

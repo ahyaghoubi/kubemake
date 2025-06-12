@@ -10,46 +10,46 @@
 
 | Component | Version(s) |
 | --- | --- |
-| Ubuntu | 20.04 |
+| Ubuntu | 20.04, 22.04, 24.04 |
 
 ### Kubernetes Distributions
 
 | Component | Version(s) |
 | --- | --- |
-| Kubernetes | 1.25.11 |
+| Kubernetes | 1.29.x, 1.30.x |
 
 ### Container Runtimes
 
 | Component | Version(s) |
 | --- | --- |
-| CRI-O | 1.25 |
+| CRI-O | 1.29, 1.30 |
   
 ### Network Plugins
 
 | Component | Version(s) |
 | --- | --- |
-| Flannel | 0.22.0 |
+| Flannel | Latest |
 
 ### Service Meshes
 
 | Component | Version(s) |
 | --- | --- |
-| Istio | 1.18.0 |
+| Istio | 1.23.x |
 
 ### Telemetry Addons
 
 | Component | Version(s) |
 | --- | --- |
-| Grafana | 9.0.1 |
-| Prometheus | 2.41.0 |
-| Jaeger | 1.35 |
-| Kiali | 1.67 |
+| Grafana | Latest |
+| Prometheus | Latest |
+| Jaeger | Latest |
+| Kiali | Latest |
 
 ### Chaos Engineering Tools
 
 | Component | Version(s) |
 | --- | --- |
-| Chaos Mesh | 2.6.1 |
+| Chaos Mesh | 2.6.x |
   
 **Note 1**: the related versions are the ones that has been tested. Other versions might work as well.
   
@@ -57,8 +57,21 @@
 
 `kubemake` does **not** provision virtual machines. This means you need your cluster nodes up and running beforehand. See [here](#operating-systems) for the operating systems currently supported. The control node, i.e., the node where `kubemake` runs, needs:
 
-- Ansible (>= 2.13.1)
-- [Kubernetes Collection for Ansible](https://galaxy.ansible.com/kubernetes/core?extIdCarryOver=true&sc_cid=701f2000001OH6uAAG)
+- Ansible (>= 6.0.0)
+- Python 3.8+
+- [Kubernetes Collection for Ansible](https://galaxy.ansible.com/kubernetes/core)
+
+**Quick Setup**: Run the provided setup script on your control node:
+```bash
+chmod +x setup.sh
+./setup.sh
+```
+
+Or install manually:
+```bash
+pip3 install --user ansible>=6.0.0
+ansible-galaxy collection install -r requirements.yml
+```
 
 **Note 2**: `kubemake`does **not** check if your cluster nodes meet hardware requirements. Please check them out based on the [components](#supported-components) you need.
 
@@ -81,17 +94,18 @@ worker-3 ansible_user=ubuntu ansible_host=192.168.1.4 kubelet_node_ip=192.168.1.
 
 [all:vars]
 ansible_password=your_sudo_password
-crio_version="1.25"
-crio_os="xUbuntu_20.04"
-kubernetes_version="1.25.11-00"
+crio_version="1.30"
+crio_os="xUbuntu_22.04"
+kubernetes_version="1.30.0-1.1"
+kubernetes_major_version="1.30"
 
 [masters:vars]
 pod_network_cidr=10.244.0.0/16
 flannel_iface_regex=[eth1|eth0]
-istio_version="1.18.0"
+istio_version="1.23.2"
 istio_profile=demo
 istio_ingress_domain=yourdomain.edu
-chaos_mesh_version="v2.6.1"
+chaos_mesh_version="v2.6.3"
 ```
 
 **Note 4**: for the sake of brevity, this inventory also contains variables. Please look [here](https://docs.ansible.com/ansible/2.8/user_guide/playbooks_best_practices.html) for Ansible best practices.

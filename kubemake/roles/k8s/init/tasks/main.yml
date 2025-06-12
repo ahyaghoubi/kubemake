@@ -7,9 +7,9 @@
       state: present
       update_cache: yes
 
-  - name: Install openshift Python package
+  - name: Install kubernetes Python package
     pip:
-      name: openshift
+      name: kubernetes
       state: present
 
 - name: Populate service facts
@@ -31,8 +31,8 @@
   when:
   - ansible_facts['services']['kubelet.service']['state'] != 'running'
 
-- name: Create ~/.kube diectory
-  become: no
+- name: Create ~/.kube directory
+  become: false
   file:
     path: $HOME/.kube
     state: directory

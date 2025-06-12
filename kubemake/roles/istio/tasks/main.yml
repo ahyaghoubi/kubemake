@@ -20,11 +20,12 @@
     state: absent
 
 - name: Create symlink
-  become: yes
+  become: true
   file:
     src: /home/{{ ansible_user }}/istio-{{ istio_version }}/bin/istioctl
     dest: /usr/local/bin/istioctl
     state: link
+    force: yes
 
 - name: Install {{ istio_profile }} profile
   shell: >

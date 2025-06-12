@@ -5,7 +5,7 @@
   delegate_to: "{{ groups['masters'][0] }}"
 
 - name: Ensure node has not joined yet
-  become: no
+  become: false
   kubernetes.core.k8s_info:
     kind: Node
     name: "{{ hostvars[inventory_hostname]['ansible_hostname'] }}"
@@ -20,7 +20,7 @@
     - k8s_node.resources == []
 
   - name: Check if node joined
-    become: no
+    become: false
     kubernetes.core.k8s_info:
       kind: Node
       name: "{{ ansible_hostname }}"
@@ -32,7 +32,7 @@
     delay: 5
 
   - name: Check if status node is ready
-    become: no
+    become: false
     kubernetes.core.k8s_info:
       kind: Node
       name: "{{ ansible_hostname }}"

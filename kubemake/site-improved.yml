@@ -1,0 +1,84 @@
+---
+- name: Pre-flight checks
+  hosts: all
+  gather_facts: yes
+  become: false
+  tags:
+    - preflight
+    - always  tasks:
+    - name: Check connectivity to all hosts
+      ping:
+      
+    - name: Verify sudo access
+      become: true
+      command: whoami
+      register: sudo_check
+      
+    - name: Ensure required variables are defined
+      assert:
+        that:
+          - kubernetes_version is defined
+          - kubernetes_major_version is defined
+          - crio_version is defined
+          - crio_os is defined
+        fail_msg: "Required variables not defined. Please check your inventory file."
+      when: inventory_hostname in groups['all']
+      
+    - name: Check minimum system requirements
+      assert:
+        that:
+          - ansible_memtotal_mb >= 2048
+          - ansible_processor_vcpus >= 2
+        fail_msg: "System does not meet minimum requirements (2GB RAM, 2 CPUs)"
+      when: inventory_hostname in groups['all']
+
+- name: Setup cluster nodes
+  hosts: all
+  become: true
+  tags:
+    - setup
+  roles:
+    - common
+    - crio
+    - k8s/common
+
+- name: Initialize Kubernetes master
+  hosts: masters
+  become: true
+  tags:
+    - init
+  roles:
+    - k8s/init
+    - flannel
+
+- name: Join worker nodes
+  hosts: workers
+  become: true
+  tags:
+    - join
+  roles:
+    - k8s/join
+
+- name: Deploy service mesh
+  hosts: masters
+  become: false
+  tags:
+    - mesh
+  roles:
+    - istio
+
+- name: Deploy telemetry addons
+  hosts: masters
+  become: false
+  tags:
+    - telemetry
+  roles:
+    - istio/addons
+
+- name: Deploy chaos engineering tools
+  hosts: masters
+  become: false
+  tags:
+    - chaos
+  roles:
+    - chaos-mesh
