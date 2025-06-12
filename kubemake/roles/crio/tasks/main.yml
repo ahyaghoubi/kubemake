@@ -36,40 +36,22 @@
     state: directory
     mode: '0755'
 
-- name: Download libcontainers public signing key
-  get_url:
-    url: https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/{{crio_os}}/Release.key
-    dest: /tmp/libcontainers.key
-    mode: '0644'
-
-- name: Add libcontainers GPG key
-  shell: |
-    gpg --dearmor < /tmp/libcontainers.key > /etc/apt/keyrings/libcontainers.gpg
-  args:
-    creates: /etc/apt/keyrings/libcontainers.gpg
-
 - name: Download libcontainers-cri-o public signing key
   get_url:
-    url: https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/{{ crio_version }}/{{ crio_os }}/Release.key
-    dest: /tmp/libcontainers-cri-o.key
+    url: https://download.opensuse.org/repositories/isv:/cri-o:/stable:/{{ crio_version }}/deb/Release.key
+    dest: /tmp/cri-o-apt-keyring.key
     mode: '0644'
 
 - name: Add libcontainers-cri-o GPG key
   shell: |
-    gpg --dearmor < /tmp/libcontainers-cri-o.key > /etc/apt/keyrings/libcontainers-cri-o.gpg
+    gpg --dearmor < /tmp/cri-o-apt-keyring.key > /etc/apt/keyrings/cri-o-apt-keyring.gpg
   args:
-    creates: /etc/apt/keyrings/libcontainers-cri-o.gpg
-
-- name: Add libcontainers apt repository
-  apt_repository:
-    repo: "deb [signed-by=/etc/apt/keyrings/libcontainers.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/{{ crio_os }} /"
-    filename: devel:kubic:libcontainers:stable
-    state: present
+    creates: /etc/apt/keyrings/cri-o-apt-keyring.gpg
 
 - name: Add libcontainers-cri-o apt repository
   apt_repository:
-    repo: "deb [signed-by=/etc/apt/keyrings/libcontainers-cri-o.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/{{ crio_version }}/{{ crio_os }} /"
-    filename: devel:kubic:libcontainers:stable:cri-o:{{ crio_version }}
+    repo: "deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] https://download.opensuse.org/repositories/isv:/cri-o:/stable:/{{ crio_version }}/deb/ /"
+    filename: cri-o
     state: present
 
 - name: Install cri-o and cri-o-runc
@@ -88,7 +70,7 @@
     state: absent
   loop:
     - /tmp/libcontainers.key
-    - /tmp/libcontainers-cri-o.key
+    - /tmp/cri-o-apt-keyring.key
 
 - name: Daemon reload
   shell: systemctl daemon-reload
