@@ -36,23 +36,15 @@
     state: directory
     mode: '0755'
 
-- name: Download libcontainers-cri-o public signing key
-  get_url:
-    url: https://download.opensuse.org/repositories/isv:/cri-o:/stable:/{{ crio_version }}/deb/Release.key
-    dest: /tmp/cri-o-apt-keyring.key
-    mode: '0644'
-
-- name: Add libcontainers-cri-o GPG key
+- name: Add CRI-O repository key and repository
   shell: |
-    gpg --dearmor < /tmp/cri-o-apt-keyring.key > /etc/apt/keyrings/cri-o-apt-keyring.gpg
+    curl -fsSL https://download.opensuse.org/repositories/isv:/cri-o:/stable:/{{ crio_version }}/deb/Release.key |
+        gpg --dearmor -o /etc/apt/keyrings/cri-o-apt-keyring.gpg
+    
+    echo "deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] https://download.opensuse.org/repositories/isv:/cri-o:/stable:/{{ crio_version }}/deb/ /" |
+        tee /etc/apt/sources.list.d/cri-o.list
   args:
     creates: /etc/apt/keyrings/cri-o-apt-keyring.gpg
-
-- name: Add libcontainers-cri-o apt repository
-  apt_repository:
-    repo: "deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] https://download.opensuse.org/repositories/isv:/cri-o:/stable:/{{ crio_version }}/deb/ /"
-    filename: cri-o
-    state: present
 
 - name: Install cri-o and cri-o-runc
   apt:
@@ -70,7 +62,6 @@
     state: absent
   loop:
     - /tmp/libcontainers.key
-    - /tmp/cri-o-apt-keyring.key
 
 - name: Daemon reload
   shell: systemctl daemon-reload
