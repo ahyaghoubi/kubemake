@@ -17,3 +17,17 @@
   kubernetes.core.k8s:
     src: $HOME/flannel.yml
     state: present
+
+- name: Wait for flannel pods to be ready
+  become: false
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Pod
+    namespace: kube-flannel
+    label_selectors:
+      - app=flannel
+    wait: true
+    wait_condition:
+      type: Ready
+      status: "True"
+    wait_timeout: 300

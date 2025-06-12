@@ -22,7 +22,7 @@
 - name: Create symlink
   become: true
   file:
-    src: /home/{{ ansible_user }}/istio-{{ istio_version }}/bin/istioctl
+    src: "{{ ansible_user_dir }}/istio-{{ istio_version }}/bin/istioctl"
     dest: /usr/local/bin/istioctl
     state: link
     force: yes
@@ -32,6 +32,19 @@
     istioctl install 
     --set profile={{ istio_profile }}
     --skip-confirmation
+  register: istio_install
+  failed_when: istio_install.rc != 0
+
+- name: Wait for Istio system pods to be ready
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Pod
+    namespace: istio-system
+    wait: true
+    wait_condition:
+      type: Ready
+      status: "True"
+    wait_timeout: 300
 
 - name: Generate manifest
   shell: >

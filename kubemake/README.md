@@ -79,9 +79,37 @@ ansible-galaxy collection install -r requirements.yml
 
 ## Quick Start
 
-### Inventory
+### Prerequisites
 
-The first thing you need is to build your [inventory](https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html). An example of inventory is the following:
+Before deployment, ensure you have:
+- Ubuntu 20.04, 22.04, or 24.04 on target nodes
+- SSH access to all cluster nodes  
+- Sudo privileges on target nodes
+- Minimum 2GB RAM and 2 CPU cores per node
+- 20GB free disk space per node
+
+### Setup Control Node
+
+1. **Install Ansible and dependencies**:
+```bash
+# Quick setup (recommended)
+chmod +x setup.sh
+./setup.sh
+
+# Manual setup
+pip3 install --user ansible>=6.0.0
+ansible-galaxy collection install -r requirements.yml
+```
+
+2. **Validate setup**:
+```bash
+chmod +x pre-check.sh
+./pre-check.sh
+```
+
+### Configure Inventory
+
+Copy and customize the inventory file:
 
 ```
 [masters]

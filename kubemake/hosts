@@ -1,0 +1,26 @@
+# Kubemake inventory for single master node setup
+[masters]
+master ansible_user=root ansible_host=192.168.251.200 kubelet_node_ip=192.168.251.200 apiserver_advertise_address=192.168.251.200
+
+[workers]
+# No workers for now - can be added later
+
+[all:vars]
+ansible_password=131072
+# CRI-O version matching Kubernetes version
+crio_version="1.30"
+# Ubuntu version - use xUbuntu_22.04 for Ubuntu 22.04, xUbuntu_24.04 for Ubuntu 24.04
+crio_os="xUbuntu_22.04"
+# Kubernetes version - use latest stable
+kubernetes_version="1.30.0-1.1"
+kubernetes_major_version="1.30"
+
+[masters:vars]
+pod_network_cidr=10.244.0.0/16
+flannel_iface_regex=[eth1|eth0]
+# Latest stable Istio version
+istio_version="1.23.2"
+istio_profile=demo
+istio_ingress_domain=yourdomain.edu
+# Latest Chaos Mesh version
+chaos_mesh_version="v2.6.3"

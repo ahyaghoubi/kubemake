@@ -23,13 +23,21 @@
   delay: 5
   failed_when: false
 
+- name: Check if cluster is already initialized
+  stat:
+    path: /etc/kubernetes/admin.conf
+  register: k8s_admin_conf
+
 - name: Initialize the K8s cluster
   shell: >
     kubeadm init 
     --apiserver-advertise-address={{ apiserver_advertise_address }} 
     --pod-network-cidr={{ pod_network_cidr }}
+    --ignore-preflight-errors=NumCPU
   when:
-  - ansible_facts['services']['kubelet.service']['state'] != 'running'
+    - not k8s_admin_conf.stat.exists
+  register: kubeadm_init
+  failed_when: kubeadm_init.rc != 0
 
 - name: Create ~/.kube directory
   become: false
@@ -41,9 +49,9 @@
   copy:
     src: /etc/kubernetes/admin.conf
     remote_src: yes
-    dest: /home/{{ ansible_user }}/.kube/config
+    dest: "{{ ansible_user_dir }}/.kube/config"
     owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
+    group: "{{ ansible_user if ansible_user != 'root' else 'root' }}"
 
 - name: Set --node-ip for kubelet
   lineinfile:
@@ -56,3 +64,23 @@
     daemon_reload: yes
     name: kubelet
     state: restarted
+
+- name: Wait for Kubernetes API to be ready
+  wait_for:
+    port: 6443
+    host: "{{ apiserver_advertise_address }}"
+    timeout: 300
+
+- name: Untaint master node for single-node cluster
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Node
+  register: cluster_nodes
+
+- name: Remove master taint if only one node
+  shell: kubectl taint nodes --all node-role.kubernetes.io/control-plane- || true
+  environment:
+    KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
+  when: 
+    - cluster_nodes.resources | length == 1
+    - groups['workers'] | length == 0
