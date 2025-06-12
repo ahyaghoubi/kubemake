@@ -37,7 +37,7 @@ sudo apt update -qq
 
 # Install Python and pip if not present
 echo "Installing Python and development tools..."
-sudo apt install -y python3 python3-pip python3-venv python3-dev build-essential curl git
+sudo apt install -y python3 python3-pip python3-venv python3-dev build-essential curl git sshpass
 
 # Check Python version
 PYTHON_VERSION=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
