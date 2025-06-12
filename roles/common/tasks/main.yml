@@ -1,4 +1,20 @@
 ---
+- name: Clean up any old CRI-O repository configurations
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/apt/sources.list.d/cri-o.list
+    - /etc/apt/keyrings/cri-o-apt-keyring.gpg
+    - /tmp/cri-o-apt-keyring.key
+  ignore_errors: true
+
+- name: Clean apt cache after removing old repositories
+  apt:
+    update_cache: yes
+    cache_valid_time: 0
+  ignore_errors: true
+
 - name: Install packages needed to use the K8s apt repository
   apt:
     name: "{{ packages }}"
