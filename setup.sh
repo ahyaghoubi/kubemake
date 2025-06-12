@@ -70,6 +70,10 @@ echo "✅ Ansible and Python packages installed with pipx"
 # Ensure pipx PATH is available in current session
 export PATH="$HOME/.local/bin:$PATH"
 
+# Source bashrc to ensure PATH is updated
+echo "🔄 Updating PATH environment..."
+source ~/.bashrc 2>/dev/null || true
+
 # Verify Ansible installation
 echo ""
 echo "🔍 Verifying Ansible installation..."
